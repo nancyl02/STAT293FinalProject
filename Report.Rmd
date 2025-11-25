@@ -1,0 +1,66 @@
+---
+title: "Final Report Draft"
+author: "Nancy Lopez"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Abstract 
+
+Give a title to your project. Then, in an abstract of 200 words or less, describe
+what is the main question you aimed to answer, and a brief summary of your conclusions.
+
+# Introduction 
+
+What is the statistical problem you studied? 
+
+What type of insight does solving this statistical problem bring when analyzing a real dataset? Who may the methods you studied benefit?
+
+What methods did you choose? Also, provide organization of the rest of the report.
+
+# Methodology
+
+Provide notation, and the statistical setup that underlies the problem. 
+Then, devote a subsection to each of the method you studied.
+Detail any optimization problems that are involved in the estimation, and any underlying technical results that justify the estimator
+
+# Implementation
+
+Provide a short comment (one-two paragraphs) on the efforts required to implement
+the methods.
+
+If you are comparing the method to a baseline method, add comments on how that was
+implemented too (one-two paragraphs for baseline method). Mention if you made use of a package, or if some coding work was necessary.
+
+Describe this briefly, and highlight the main challenge encountered in the coding process
+
+# Data analysis
+
+If you go for real data analysis, describe data source, processing and analysis. 
+
+If you replicate some simulations from the articles, provide a description of how the data is simulated.
+
+Finally, provide visualizations of the real-data and simulated results.
+
+# Conclusions:
+
+What are the conclusions reached from the project?
+
+Share any interesting findings.
+
+Are there future steps you would be interested in pursuing?
+
+Describe your conclusions from the real data analysis.
+
+Alternatively, describe conclusions you may find interesting from your simulated data analysis
+
+# References 
+
+List all the references of the project
+
+# Team member contribution
+
+Provide in the last page a
+summary of the contributions that each team member provided for the development of the project.
+
+The team contribution section will be used to weight the grade of each team member for fairness. If contributions are not even, your grade may be affected
