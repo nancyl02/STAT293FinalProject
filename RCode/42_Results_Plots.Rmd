@@ -1,0 +1,702 @@
+---
+title: "STAT293 - Simulation Result Plots"
+author: "Nancy Lopez, Pei-Ling Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+
+Table 1 lists the 16 simulation settings, and Table 2 summarizes the common parameter values (with heterogeneity fixed at the medium level).
+
+**Table 1. Simulation settings: each row corresponds to one design configuration (indexed by "Setting No.").**
+
+
+| Setting No. | K  | T  | d  | p |
+|------------|----|----|----|---|
+| 1          | 10 | 30 | 10 | 1 |
+| 2          | 10 | 30 | 10 | 2 |
+| 3          | 10 | 30 | 20 | 1 |
+| 4          | 10 | 30 | 20 | 2 |
+| 5          | 10 | 50 | 10 | 1 |
+| 6          | 10 | 50 | 10 | 2 |
+| 7          | 10 | 50 | 20 | 1 |
+| 8          | 10 | 50 | 20 | 2 |
+| 9          | 20 | 30 | 10 | 1 |
+| 10         | 20 | 30 | 10 | 2 |
+| 11         | 20 | 30 | 20 | 1 |
+| 12         | 20 | 30 | 20 | 2 |
+| 13         | 20 | 50 | 10 | 1 |
+| 14         | 20 | 50 | 10 | 2 |
+| 15         | 20 | 50 | 20 | 1 |
+| 16         | 20 | 50 | 20 | 2 |
+
+
+**Table 2. Common Parameter Values Used in All Simulation Settings**
+
+| Parameter     | Value   | Description                                        |
+|---------------|---------|----------------------------------------------------|
+| sparsity      | 0.05    | Proportion of non-zero coefficients               |
+| heterogeneity | medium  | Level of heterogeneity ("low", "medium", "high")  |
+| sigma_eps     | 0.1     | Standard deviation of noise                        |
+| phi_max       | 0.9     | Upper bound for coefficient generation            |
+| phi_min       | 0.1     | Lower bound for coefficient generation            |
+| n_holdout     | 5       | Number of time points withheld for forecasting    |
+
+\newpage
+```{r include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+# ESTIMATION ERROR
+
+```{r echo=FALSE}
+# var(1)
+est_p1 <- tribble(
+  ~Setting, ~Method, ~Error,
+  1, "LASSO (Lag 1)", 10.18,
+  3, "LASSO (Lag 1)", 48.046,
+  5, "LASSO (Lag 1)", 6.817,
+  7, "LASSO (Lag 1)", 19.123,
+  9, "LASSO (Lag 1)", 22.684,
+  11, "LASSO (Lag 1)", 72.794,
+  13, "LASSO (Lag 1)", 11.121,
+  15, "LASSO (Lag 1)", 38.911,
+
+  1, "Multi-VAR (Standard)", 5.68,
+  3, "Multi-VAR (Standard)", 24.33,
+  5, "Multi-VAR (Standard)", 4.669,
+  7, "Multi-VAR (Standard)", 17.792,
+  9, "Multi-VAR (Standard)", 13.195,
+  11, "Multi-VAR (Standard)", 41.067,
+  13, "Multi-VAR (Standard)", 7.783,
+  15, "Multi-VAR (Standard)", 31.332,
+
+  1, "Multi-VAR (Adaptive)", 13.43,
+  3, "Multi-VAR (Adaptive)", 31.844,
+  5, "Multi-VAR (Adaptive)", 6.75,
+  7, "Multi-VAR (Adaptive)", 16.689,
+  9, "Multi-VAR (Adaptive)", 21.003,
+  11, "Multi-VAR (Adaptive)", 58.807,
+  13, "Multi-VAR (Adaptive)", 16.982,
+  15, "Multi-VAR (Adaptive)", 31.014
+)
+
+est_p1$P <- 1
+
+# var(2)
+
+est_p2 <- tribble(
+  ~Setting, ~Method, ~Error,
+  2, "LASSO (Lag 1)", 12.65,
+  4, "LASSO (Lag 1)", 49.053,
+  6, "LASSO (Lag 1)", 10.229,
+  8, "LASSO (Lag 1)", 32.172,
+  10, "LASSO (Lag 1)", 30.903,
+  12, "LASSO (Lag 1)", 123.418,
+  14, "LASSO (Lag 1)", 12.713,
+  16, "LASSO (Lag 1)", 55.389,
+
+  2, "LASSO (Lag 2)", 30.17,
+  4, "LASSO (Lag 2)", 62.377,
+  6, "LASSO (Lag 2)", 13.787,
+  8, "LASSO (Lag 2)", 32.602,
+  10, "LASSO (Lag 2)", 41.08,
+  12, "LASSO (Lag 2)", 144.775,
+  14, "LASSO (Lag 2)", 20.24,
+  16, "LASSO (Lag 2)", 64.988,
+
+  2, "Multi-VAR (Standard)", 7.3,
+  4, "Multi-VAR (Standard)", 27.552,
+  6, "Multi-VAR (Standard)", 5.904,
+  8, "Multi-VAR (Standard)", 24.21,
+  10, "Multi-VAR (Standard)", 12.288,
+  12, "Multi-VAR (Standard)", 50.7,
+  14, "Multi-VAR (Standard)", 10.356,
+  16, "Multi-VAR (Standard)", 42.537,
+
+  2, "Multi-VAR (Adaptive)", 13.09,
+  4, "Multi-VAR (Adaptive)", 41.618,
+  6, "Multi-VAR (Adaptive)", 12.531,
+  8, "Multi-VAR (Adaptive)", 35.669,
+  10, "Multi-VAR (Adaptive)", 15.739,
+  12, "Multi-VAR (Adaptive)", 75.942,
+  14, "Multi-VAR (Adaptive)", 12.331,
+  16, "Multi-VAR (Adaptive)", 45.384
+)
+
+est_p2$P <- 2
+
+# Combine
+est_all <- bind_rows(est_p1, est_p2)
+
+```
+
+
+```{r echo=FALSE}
+my_cols <- c(
+  "LASSO (Lag 1)"        = "deepskyblue",
+  "LASSO (Lag 2)"        = "seagreen4",
+  "Multi-VAR (Standard)" = "orange",
+  "Multi-VAR (Adaptive)" = "hotpink"
+)
+
+
+p1 <- est_all %>%
+  filter(P == 1, Setting %% 2 == 1)
+
+e1 <- ggplot(p1, aes(x = Setting, y = Error, color = Method)) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = unique(p1$Setting)) +
+  geom_vline(xintercept = 8, linetype = "dashed") +
+  scale_color_manual(values = my_cols) +
+  labs(
+    title = "Estimation Error (P = 1)",
+    x = "Setting",
+    y = "Error"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(legend.position = "bottom")
+
+e1 +guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+```
+
+```{r echo=FALSE}
+p2 <- est_all %>%
+  filter(P == 2, Setting %% 2 == 0)
+
+e2 <- ggplot(p2, aes(x = Setting, y = Error, color = Method)) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = unique(p2$Setting)) +
+  geom_vline(xintercept = 9, linetype = "dashed") +
+  scale_color_manual(values = my_cols) +
+  labs(
+    title = "Estimation Error (P = 2)",
+    x = "Setting",
+    y = "Error"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(legend.position = "bottom")
+
+e2 + guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+
+```
+
+# SENSITIVITY 
+
+```{r echo=FALSE}
+# var(1)
+
+sens_p1 <- tribble(
+  ~Setting, ~Method, ~Sens_Mean, ~Sens_SD,
+  1, "LASSO (Lag 1)", 0.72, 0.193,
+  3, "LASSO (Lag 1)", 0.705, 0.128,
+  5, "LASSO (Lag 1)", 0.900, 0.141,
+  7, "LASSO (Lag 1)", 0.840, 0.074,
+  9, "LASSO (Lag 1)", 0.710, 0.117,
+  11, "LASSO (Lag 1)", 0.645, 0.131,
+  13, "LASSO (Lag 1)", 0.610, 0.229,
+  15, "LASSO (Lag 1)", 0.753, 0.092,
+
+  1, "Multi-VAR (Standard)", 0.86, 0.097,
+  3, "Multi-VAR (Standard)", 0.905, 0.050,
+  5, "Multi-VAR (Standard)", 0.900, 0.105,
+  7, "Multi-VAR (Standard)", 0.940, 0.032,
+  9, "Multi-VAR (Standard)", 0.820, 0.114,
+  11, "Multi-VAR (Standard)", 0.850, 0.069,
+  13, "Multi-VAR (Standard)", 0.930, 0.098,
+  15, "Multi-VAR (Standard)", 0.857, 0.036,
+
+  1, "Multi-VAR (Adaptive)", 0.14, 0.232,
+  3, "Multi-VAR (Adaptive)", 0.52, 1.757,
+  5, "Multi-VAR (Adaptive)", 0.440, 0.280,
+  7, "Multi-VAR (Adaptive)", 0.675, 0.086,
+  9, "Multi-VAR (Adaptive)", 0.070, 0.198,
+  11, "Multi-VAR (Adaptive)", 0.460, 0.137,
+  13, "Multi-VAR (Adaptive)", 0.070, 0.163,
+  15, "Multi-VAR (Adaptive)", 0.573, 0.106
+)
+
+sens_p1$P <- 1  
+
+
+## var(2)
+
+sens_p2 <- tribble(
+  ~Setting, ~Method, ~Sens_Mean, ~Sens_SD,
+  2, "LASSO (Lag 1)", 0.78, 0.175,
+  4, "LASSO (Lag 1)", 0.69, 0.094,
+  6, "LASSO (Lag 1)", 0.72, 0.270,
+  8, "LASSO (Lag 1)", 0.795, 0.080,
+  10, "LASSO (Lag 1)", 0.680, 0.199,
+  12, "LASSO (Lag 1)", 0.605, 0.093,
+  14, "LASSO (Lag 1)", 0.870, 0.134,
+  16, "LASSO (Lag 1)", 0.833, 0.104,
+
+  2, "LASSO (Lag 2)", 0.53, 0.125,
+  4, "LASSO (Lag 2)", 0.693, 0.049,
+  6, "LASSO (Lag 2)", 0.690, 0.213,
+  8, "LASSO (Lag 2)", 0.838, 0.087,
+  10, "LASSO (Lag 2)", 0.690, 0.117,
+  12, "LASSO (Lag 2)", 0.585, 0.099,
+  14, "LASSO (Lag 2)", 0.895, 0.089,
+  16, "LASSO (Lag 2)", 0.790, 0.086,
+
+  2, "Multi-VAR (Standard)", 0.84, 0.184,
+  4, "Multi-VAR (Standard)", 0.875, 0.042,
+  6, "Multi-VAR (Standard)", 0.90, 0.141,
+  8, "Multi-VAR (Standard)", 0.895, 0.064,
+  10, "Multi-VAR (Standard)", 0.800, 0.172,
+  12, "Multi-VAR (Standard)", 0.845, 0.083,
+  14, "Multi-VAR (Standard)", 0.900, 0.121,
+  16, "Multi-VAR (Standard)", 0.942, 0.063,
+
+  2, "Multi-VAR (Adaptive)", 0.24, 0.350,
+  4, "Multi-VAR (Adaptive)", 0.65, 0.082,
+  6, "Multi-VAR (Adaptive)", 0.22, 0.305,
+  8, "Multi-VAR (Adaptive)", 0.680, 0.114,
+  10, "Multi-VAR (Adaptive)", 0.410, 0.238,
+  12, "Multi-VAR (Adaptive)", 0.380, 0.185,
+  14, "Multi-VAR (Adaptive)", 0.630, 0.236,
+  16, "Multi-VAR (Adaptive)", 0.750, 0.105
+)
+
+sens_p2$P <- 2
+
+
+sens_all <- bind_rows(sens_p1, sens_p2)
+
+```
+
+```{r echo=FALSE}
+df1 <- sens_all %>% filter(P == 1)
+
+p1 <- ggplot(df1, aes(x = Setting, y = Sens_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Means of Sensitivity (P = 1)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(legend.position = "bottom") +
+  geom_vline(xintercept = 8, linetype = "dashed")
+
+p1 + guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+p1_sd <- ggplot(df1, aes(x = Setting, y = Sens_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Standard Deviations of Sensitivity (P = 1)",
+    x = "Setting",
+    y = "Standard Deviation"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(legend.position = "bottom") +
+  geom_vline(xintercept = 8, linetype = "dashed")
+
+p1_sd + guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+
+```
+
+```{r echo=FALSE}
+df2 <- sens_all %>% filter(P == 2)
+
+p2 <- ggplot(df2, aes(x = Setting, y = Sens_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Means of Sensitivity (P = 2)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed")
+
+p2 + guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+p2_sd <- ggplot(df2, aes(x = Setting, y = Sens_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Standard Deviations of Sensitivity (P = 2)",
+    x = "Setting",
+    y = "Standard Deviation"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed")
+
+p2_sd + guides(color = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom")
+
+```
+
+# SPECIFICITY 
+
+```{r echo=FALSE}
+# var(1)
+
+spec_p1 <- tribble(
+  ~Setting, ~Method, ~Spec_Mean, ~Spec_SD,
+
+  1,  "LASSO (Lag 1)", 0.837, 0.057,
+  3,  "LASSO (Lag 1)", 0.855, 0.053,
+  5,  "LASSO (Lag 1)", 0.827, 0.053,
+  7,  "LASSO (Lag 1)", 0.855, 0.045,
+  9,  "LASSO (Lag 1)", 0.857, 0.049,
+  11, "LASSO (Lag 1)", 0.868, 0.045,
+  13, "LASSO (Lag 1)", 0.844, 0.072,
+  15, "LASSO (Lag 1)", 0.857, 0.036,
+
+  1,  "Multi-VAR (Standard)", 0.818, 0.027,
+  3,  "Multi-VAR (Standard)", 0.800, 0.012,
+  5,  "Multi-VAR (Standard)", 0.719, 0.039,
+  7,  "Multi-VAR (Standard)", 0.777, 0.045,
+  9,  "Multi-VAR (Standard)", 0.833, 0.026,
+  11, "Multi-VAR (Standard)", 0.795, 0.011,
+  13, "Multi-VAR (Standard)", 0.816, 0.037,
+  15, "Multi-VAR (Standard)", 0.790, 0.016,
+
+  1,  "Multi-VAR (Adaptive)", 0.998, 0.007,
+  3,  "Multi-VAR (Adaptive)", 0.978, 0.029,
+  5,  "Multi-VAR (Adaptive)", 0.995, 0.010,
+  7,  "Multi-VAR (Adaptive)", 0.985, 0.008,
+  9,  "Multi-VAR (Adaptive)", 0.997, 0.010,
+  11, "Multi-VAR (Adaptive)", 0.986, 0.021,
+  13, "Multi-VAR (Adaptive)", 0.999, 0.002,
+  15, "Multi-VAR (Adaptive)", 0.991, 0.009
+)
+
+spec_p1$P <- 1
+
+# var(2)
+
+spec_p2 <- tribble(
+  ~Setting, ~Method, ~Spec_Mean, ~Spec_SD,
+
+  2,  "LASSO (Lag 1)", 0.849, 0.058,
+  4,  "LASSO (Lag 1)", 0.817, 0.071,
+  6,  "LASSO (Lag 1)", 0.799, 0.084,
+  8,  "LASSO (Lag 1)", 0.789, 0.069,
+  10, "LASSO (Lag 1)", 0.808, 0.061,
+  12, "LASSO (Lag 1)", 0.830, 0.050,
+  14, "LASSO (Lag 1)", 0.844, 0.068,
+  16, "LASSO (Lag 1)", 0.808, 0.054,
+
+  2,  "LASSO (Lag 2)", 0.838, 0.055,
+  4,  "LASSO (Lag 2)", 0.869, 0.032,
+  6,  "LASSO (Lag 2)", 0.854, 0.037,
+  8,  "LASSO (Lag 2)", 0.858, 0.018,
+  10, "LASSO (Lag 2)", 0.846, 0.060,
+  12, "LASSO (Lag 2)", 0.874, 0.023,
+  14, "LASSO (Lag 2)", 0.858, 0.051,
+  16, "LASSO (Lag 2)", 0.868, 0.024,
+
+  2,  "Multi-VAR (Standard)", 0.694, 0.013,
+  4,  "Multi-VAR (Standard)", 0.614, 0.093,
+  6,  "Multi-VAR (Standard)", 0.858, 0.027,
+  8,  "Multi-VAR (Standard)", 0.562, 0.108,
+  10, "Multi-VAR (Standard)", 0.744, 0.028,
+  12, "Multi-VAR (Standard)", 0.785, 0.021,
+  14, "Multi-VAR (Standard)", 0.791, 0.037,
+  16, "Multi-VAR (Standard)", 0.581, 0.024,
+
+  2,  "Multi-VAR (Adaptive)", 0.995, 0.009,
+  4,  "Multi-VAR (Adaptive)", 0.946, 0.040,
+  6,  "Multi-VAR (Adaptive)", 1.000, 0.000,
+  8,  "Multi-VAR (Adaptive)", 0.937, 0.036,
+  10, "Multi-VAR (Adaptive)", 0.982, 0.023,
+  12, "Multi-VAR (Adaptive)", 0.985, 0.020,
+  14, "Multi-VAR (Adaptive)", 0.997, 0.008,
+  16, "Multi-VAR (Adaptive)", 0.959, 0.025
+)
+
+spec_p2$P <- 2
+
+spec_all <- bind_rows(spec_p1, spec_p2)
+```
+
+```{r echo=FALSE}
+df_p1 <- spec_all %>% filter(P == 1)
+
+ss1 <- ggplot(df_p1, aes(x = Setting, y = Spec_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Means of Specificity (P = 1)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 8, linetype = "dashed") 
+
+ss1 + guides(color = guide_legend(nrow = 2))
+
+ss1.sd <- ggplot(df_p1, aes(x = Setting, y = Spec_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Standard Deviations of Specificity (P = 1)",
+    x = "Setting",
+    y = "Standard Deviation"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 8, linetype = "dashed") 
+
+ss1.sd + guides(color = guide_legend(nrow = 2))
+```
+
+```{r echo=FALSE}
+df_p2 <- spec_all %>% filter(P == 2)
+
+ss2 <- ggplot(df_p2, aes(x = Setting, y = Spec_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Means of Specificity (P = 2)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed") 
+
+ss2 + guides(color = guide_legend(nrow = 2))
+
+
+ss2.sd <- ggplot(df_p2, aes(x = Setting, y = Spec_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Standard Deviations of Specificity (P = 2)",
+    x = "Setting",
+    y = "Standard Deviation"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed") 
+
+ss2.sd + guides(color = guide_legend(nrow = 2))
+
+```
+
+# RMSFE
+
+```{r echo=FALSE}
+# var(1)
+
+rmsfe_p1 <- tribble(
+  ~Setting, ~Method, ~RMSFE_Mean, ~RMSFE_SD,
+
+  1,  "LASSO (Lag 1)", 0.104, 0.015,
+  3,  "LASSO (Lag 1)", 0.113, 0.014,
+  5,  "LASSO (Lag 1)", 0.107, 0.009,
+  7,  "LASSO (Lag 1)", 0.104, 0.009,
+  9,  "LASSO (Lag 1)", 0.104, 0.013,
+  11, "LASSO (Lag 1)", 0.112, 0.011,
+  13, "LASSO (Lag 1)", 0.101, 0.008,
+  15, "LASSO (Lag 1)", 0.109, 0.008,
+
+  1,  "Multi-VAR (Standard)", 0.105, 0.016,
+  3,  "Multi-VAR (Standard)", 0.109, 0.012,
+  5,  "Multi-VAR (Standard)", 0.104, 0.008,
+  7,  "Multi-VAR (Standard)", 0.104, 0.008,
+  9,  "Multi-VAR (Standard)", 0.109, 0.016,
+  11, "Multi-VAR (Standard)", 0.112, 0.015,
+  13, "Multi-VAR (Standard)", 0.101, 0.007,
+  15, "Multi-VAR (Standard)", 0.107, 0.007,
+
+  1,  "Multi-VAR (Adaptive)", 0.101, 0.013,
+  3,  "Multi-VAR (Adaptive)", 0.107, 0.012,
+  5,  "Multi-VAR (Adaptive)", 0.105, 0.009,
+  7,  "Multi-VAR (Adaptive)", 0.104, 0.007,
+  9,  "Multi-VAR (Adaptive)", 0.102, 0.011,
+  11, "Multi-VAR (Adaptive)", 0.106, 0.009,
+  13, "Multi-VAR (Adaptive)", 0.102, 0.007,
+  15, "Multi-VAR (Adaptive)", 0.107, 0.007
+)
+
+rmsfe_p1$P <- 1
+
+# var(2)
+
+rmsfe_p2 <- tribble(
+  ~Setting, ~Method, ~RMSFE_Mean, ~RMSFE_SD,
+
+  2,  "LASSO (Lag 1)", 0.110, 0.0013,
+  4,  "LASSO (Lag 1)", 0.210, 0.074,
+  6,  "LASSO (Lag 1)", 0.109, 0.012,
+  8,  "LASSO (Lag 1)", 0.155, 0.034,
+  10, "LASSO (Lag 1)", 0.117, 0.015,
+  12, "LASSO (Lag 1)", 0.154, 0.042,
+  14, "LASSO (Lag 1)", 0.120, 0.014,
+  16, "LASSO (Lag 1)", 0.135, 0.026,
+
+  2,  "LASSO (Lag 2)", 0.114, 0.017,
+  4,  "LASSO (Lag 2)", 0.195, 0.079,
+  6,  "LASSO (Lag 2)", 0.104, 0.016,
+  8,  "LASSO (Lag 2)", 0.139, 0.043,
+  10, "LASSO (Lag 2)", 0.113, 0.015,
+  12, "LASSO (Lag 2)", 0.141, 0.027,
+  14, "LASSO (Lag 2)", 0.111, 0.010,
+  16, "LASSO (Lag 2)", 0.117, 0.016,
+
+  2,  "Multi-VAR (Standard)", 0.110, 0.014,
+  4,  "Multi-VAR (Standard)", 0.815, 1.293,
+  6,  "Multi-VAR (Standard)", 0.108, 0.011,
+  8,  "Multi-VAR (Standard)", 1.125, 2.258,
+  10, "Multi-VAR (Standard)", 0.116, 0.015,
+  12, "Multi-VAR (Standard)", 0.146, 0.038,
+  14, "Multi-VAR (Standard)", 0.121, 0.015,
+  16, "Multi-VAR (Standard)", 0.243, 0.495,
+
+  # Multi-VAR (Adaptive)
+  2,  "Multi-VAR (Adaptive)", 0.108, 0.012,
+  4,  "Multi-VAR (Adaptive)", 0.722, 1.075,
+  6,  "Multi-VAR (Adaptive)", 0.106, 0.010,
+  8,  "Multi-VAR (Adaptive)", 0.991, 2.063,
+  10, "Multi-VAR (Adaptive)", 0.113, 0.014,
+  12, "Multi-VAR (Adaptive)", 0.159, 0.047,
+  14, "Multi-VAR (Adaptive)", 0.121, 0.015,
+  16, "Multi-VAR (Adaptive)", 0.270, 0.598
+)
+
+rmsfe_p2$P <- 2
+
+rmsfe_all <- bind_rows(rmsfe_p1, rmsfe_p2)
+```
+
+```{r echo=FALSE}
+df.r <- rmsfe_all %>% filter(P == 1)
+
+r1 <- ggplot(df.r, aes(x = Setting, y = RMSFE_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Means of RMSFE (P = 1)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 8, linetype = "dashed")
+
+r1 + guides(color = guide_legend(nrow = 2))
+
+r1.sd <- ggplot(df.r, aes(x = Setting, y = RMSFE_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(1,3,5,7,9,11,13,15)) +
+  labs(
+    title = "Standard Deviations of RMSFE (P = 1)",
+    x = "Setting",
+    y = "SD"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 8, linetype = "dashed")
+
+r1.sd + guides(color = guide_legend(nrow = 2))
+
+```
+
+```{r echo=FALSE}
+df.r2 <- rmsfe_all %>% filter(P == 2)
+
+r2 <- ggplot(df.r2, aes(x = Setting, y = RMSFE_Mean, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Means of RMSFE (P = 2)",
+    x = "Setting",
+    y = "Mean"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed")  
+
+r2 + guides(color = guide_legend(nrow = 2))
+
+r2.sd <- ggplot(df.r2, aes(x = Setting, y = RMSFE_SD, color = Method)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = my_cols) +
+  scale_x_continuous(breaks = c(2,4,6,8,10,12,14,16)) +
+  labs(
+    title = "Standard Deviations of RMSFE (P = 2)",
+    x = "Setting",
+    y = "SD"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 10)
+  ) +
+  geom_vline(xintercept = 9, linetype = "dashed")
+
+r2.sd + guides(color = guide_legend(nrow = 2))
+
+
+```
