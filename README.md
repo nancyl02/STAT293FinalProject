@@ -43,3 +43,20 @@ This project investigates methods for estimating **multivariate VAR(p) models** 
 **41_Examples.Rmd (41_Examples.pdf)** – Generates simulations for both methods and evaluates the results.
 
 **42_Results_Plots.Rmd (42_Results_Plots.pdf)** – Generates plots summarizing the results.
+
+# Reproducing the Results
+
+To reproduce the results in this project, just follow these steps:
+
+1. **Set up your environment**  
+   - Open RStudio and set your working directory to the project folder.  
+   - Run `00_requirements.R` to install and load all necessary packages.
+
+2. **Run example analyses**  
+   - Open `41_Examples.Rmd` and adjust parameters directly in *Step 2*.  
+   - This will automatically simulate data, fit both Multi-VAR and LASSO VAR models, and compute all evaluation metrics.
+
+3. **Generate plots**  
+   - Open `42_Results_Plots.Rmd` and update the results dataset as needed.  
+   - This produces figures summarizing model performance across different settings.
+
