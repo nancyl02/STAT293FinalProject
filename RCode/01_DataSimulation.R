@@ -1,8 +1,4 @@
 # --------------------------------------------------
-# 
-# --------------------------------------------------
-
-# --------------------------------------------------
 # Generate Coefficient Matrix (Can be used for common or unique)
 # --------------------------------------------------
 gen_coef_matirx <- function(d, idx, min_val = phi_min, max_val = phi_max){
@@ -224,3 +220,4 @@ gen_individual_B <- function(K, d, p, n_common, n_unique, max_attempts = 100){
   return(individual_B)
   
 }
+
